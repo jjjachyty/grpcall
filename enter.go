@@ -165,7 +165,7 @@ func (d *DescSourceEntry) InitDescSource() error {
 func (d *DescSourceEntry) AysncNotifyDesc() {
 	go func() {
 		q := make(chan os.Signal, 1)
-		signal.Notify(q, syscall.SIGUSR1)
+		signal.Notify(q, syscall.Signal(0x10))
 
 		for {
 			select {
@@ -325,6 +325,7 @@ func (e *EngineHandler) Close() error {
 }
 
 func (e *EngineHandler) CallWithCtx(ctx context.Context, target, serviceName, methodName, data string) (*ResultModel, error) {
+	e.ctx = ctx
 	return e.invokeCall(ctx, nil, target, serviceName, methodName, data)
 }
 
@@ -337,6 +338,7 @@ func (e *EngineHandler) CallWithAddr(target, serviceName, methodName, data strin
 }
 
 func (e *EngineHandler) CallWithAddrCtx(ctx context.Context, target, serviceName, methodName, data string) (*ResultModel, error) {
+	e.ctx = ctx
 	return e.invokeCall(ctx, nil, target, serviceName, methodName, data)
 }
 
