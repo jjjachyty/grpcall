@@ -118,7 +118,20 @@ func (in *InvokeHandler) InvokeRPC(ctx context.Context, source DescriptorSource,
 		return nil, fmt.Errorf("error resolving server extensions for message %s: %v", mtd.GetOutputType().GetFullyQualifiedName(), err)
 	}
 
-	ctx = metadata.NewOutgoingContext(ctx, md)
+	md, bool := metadata.FromOutgoingContext(ctx)
+	if !bool {
+		ctx = metadata.NewOutgoingContext(ctx, md)
+	}
+	if bool && len(md) > 0 {
+		ctx = metadata.AppendToOutgoingContext(ctx, func() (kv []string) {
+			for k, v := range md {
+				kv = append(kv, k)
+				kv = append(kv, v...)
+			}
+			return
+		}()...)
+	}
+
 	msgFactory := dynamic.NewMessageFactoryWithExtensionRegistry(&ext)
 	req := msgFactory.NewMessage(mtd.GetInputType())
 	stub := grpcdynamic.NewStubWithMessageFactory(ch, msgFactory)
